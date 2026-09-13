@@ -4,10 +4,13 @@ const FormData = require('form-data');
 const QRCode = require('qrcode');
 const { evaluate } = require('mathjs');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+const translate = require('@iamtraction/google-translate');
 
 const { downloadMedia, unwrapViewOnce, getQuotedMessage } = require('../lib/media');
-const { videoBufferToWebpSticker, videoBufferToMp3 } = require('../lib/ffmpegTools');
+const { videoBufferToMp3 } = require('../lib/ffmpegTools');
 const { setBotProfilePicture } = require('../lib/profile');
+const cfg = require('../config');
 
 module.exports = {
   category: 'TOOLS',
@@ -56,17 +59,14 @@ module.exports = {
           return;
         }
         try {
-          let webp;
-          if (imageTarget) {
-            const buffer = await downloadMedia(imageTarget, 'image');
-            webp = await sharp(buffer)
-              .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-              .webp()
-              .toBuffer();
-          } else {
-            const buffer = await downloadMedia(videoTarget, 'video');
-            webp = await videoBufferToWebpSticker(buffer);
-          }
+          const buffer = await downloadMedia(imageTarget || videoTarget, imageTarget ? 'image' : 'video');
+          const sticker = new Sticker(buffer, {
+            pack: cfg.BOT_NAME,
+            author: cfg.OWNER_NAME,
+            type: StickerTypes.FULL,
+            quality: 70,
+          });
+          const webp = await sticker.toBuffer();
           await sock.sendMessage(jid, { sticker: webp }, { quoted: msg });
         } catch (err) {
           await sock.sendMessage(jid, { text: `❌ ${err.message}` }, { quoted: msg });
@@ -187,24 +187,14 @@ module.exports = {
         }
         const [pack, author] = args.join(' ').split('|').map((s) => s?.trim());
         try {
-          const { Image: WebpImage } = require('node-webpmux');
           const buffer = await downloadMedia(quotedSticker, 'sticker');
-          const img = new WebpImage();
-          await img.load(buffer);
-          const json = {
-            'sticker-pack-id': `roanmdv3-${Date.now()}`,
-            'sticker-pack-name': pack || 'ROAN MD V3',
-            'sticker-pack-publisher': author || 'MR ROAN Inc',
-          };
-          const exifAttr = Buffer.from([
-            0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57,
-            0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00,
-          ]);
-          const jsonBuffer = Buffer.from(JSON.stringify(json), 'utf8');
-          const exif = Buffer.concat([exifAttr, jsonBuffer]);
-          exif.writeUIntLE(jsonBuffer.length, 14, 4);
-          img.exif = exif;
-          const webp = await img.save(null);
+          const sticker = new Sticker(buffer, {
+            pack: pack || cfg.BOT_NAME,
+            author: author || cfg.OWNER_NAME,
+            type: StickerTypes.FULL,
+            quality: 70,
+          });
+          const webp = await sticker.toBuffer();
           await sock.sendMessage(jid, { sticker: webp }, { quoted: msg });
         } catch (err) {
           await sock.sendMessage(jid, { text: `❌ ${err.message}` }, { quoted: msg });
@@ -279,7 +269,7 @@ module.exports = {
     },
     {
       name: 'translate',
-      description: 'Traduit un texte (.translate fr Hello world)',
+      description: 'Traduit un texte, langue source détectée automatiquement (.translate fr Hello world)',
       implemented: true,
       async execute(sock, msg, args, jid) {
         if (args.length < 2) {
@@ -289,11 +279,8 @@ module.exports = {
         const targetLang = args[0];
         const text = args.slice(1).join(' ');
         try {
-          const res = await axios.get('https://api.mymemory.translated.net/get', {
-            params: { q: text, langpair: `en|${targetLang}` },
-          });
-          const translated = res.data?.responseData?.translatedText;
-          await sock.sendMessage(jid, { text: `🌐 ${translated || 'Traduction indisponible.'}` }, { quoted: msg });
+          const result = await translate(text, { to: targetLang });
+          await sock.sendMessage(jid, { text: `🌐 ${result.text}` }, { quoted: msg });
         } catch (err) {
           await sock.sendMessage(jid, { text: `❌ ${err.message}` }, { quoted: msg });
         }
