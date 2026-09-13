@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#050807">
+  <title>ROAN MD V3 | WhatsApp Pairing</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="badge">✦ NEXT-GEN EDITION</div>
+      <div class="logo">R<span>O</span>AN</div>
+      <h1>ROAN MD V3</h1>
+      <p>Le système de liaison WhatsApp rapide et moderne pour connecter votre appareil en quelques secondes.</p>
+      <div class="features"><span>⚡ Instant Pairing</span><span>🔒 Secure</span><span>🤖 Multi-Session</span><span>🚀 24/7</span></div>
+    </header>
+
+    <section class="card">
+      <div class="card-top"><div><small>WHATSAPP</small><h2>Lier un numéro</h2></div><div id="status" class="status"><i></i><span>Vérification...</span></div></div>
+      <p class="muted">Entrez votre numéro au format international, sans le signe <b>+</b>.</p>
+      <form id="pairForm">
+        <label for="number">Numéro WhatsApp</label>
+        <div class="input-wrap"><span>+</span><input id="number" name="number" inputmode="numeric" autocomplete="tel" placeholder="237600000000" required></div>
+        <button id="generateBtn" type="submit"><span>Générer le code</span><b>→</b></button>
+      </form>
+      <div id="error" class="error" hidden></div>
+      <div id="result" class="result" hidden>
+        <div class="result-label">VOTRE CODE DE LIAISON</div>
+        <div class="code-row"><strong id="code">----</strong><button id="copyBtn" type="button">Copier</button></div>
+        <div class="timer"><div class="timer-head"><span>Expire dans</span><strong id="timer">60s</strong></div><div class="bar"><i id="timerBar"></i></div></div>
+      </div>
+    </section>
+
+    <section class="steps"><h3>Comment connecter ?</h3><div class="step"><b>01</b><span>Ouvrez WhatsApp sur votre téléphone.</span></div><div class="step"><b>02</b><span>Allez dans <strong>Appareils connectés</strong>.</span></div><div class="step"><b>03</b><span>Choisissez <strong>Lier un appareil</strong>, puis utilisez le code.</span></div></section>
+    <footer>MR ROAN Inc. <span>•</span> ROAN MD V3</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
